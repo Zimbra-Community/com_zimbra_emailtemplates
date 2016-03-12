@@ -1,4 +1,4 @@
-Zimbra Email templates
+Zimbra Email Templates
 ==========
 
 If you find Email templates useful and want to support its continued development, you can make donations via:
@@ -9,14 +9,16 @@ _This is the adopted version of Email templates -zimlet_ from Zimbra Inc.
 
 Email templates are useful for Sales, Support or anyone who sends out the same email on a regular basis.
 
-Features:
+Set templates folder
+![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/1.png "Set templates folder")
 
-  * Display events from all of your checked mail calendars (including shared calendars.)
-  * Events are colour coded for each calendar.
-  * Place the mouse cursor over an event to see the full event details.
-  * Clicking on an event jumps to that day in your calendar.
-  * Click on a news item to read the article right in Zimbra mail.
-  * Click on the News and Events header to hide the sidebar.
-  * Calendars (and news feeds) can be hidden from the sidebar by prefixing their name with a tilde (~) character (e.g. "~Vacation".)
+Create a template email
+![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/2.png "Create a template email")
 
-Email templates are useful for Sales, Support or anyone who sends out the same email on a regular basis.
+Save the template
+![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/3.png "Save the template")
+
+Use the template for new mails
+![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/4.png "Use the template for new mails")
+
+Or if you prefer video: https://youtu.be/o877BaQRiUY
