@@ -568,8 +568,20 @@ function () {
 
 };
 
+Com_Zimbra_EmailTemplates.prototype.status = function(text, type) {
+   var transitions = [ ZmToast.FADE_IN, ZmToast.PAUSE, ZmToast.PAUSE, ZmToast.PAUSE, ZmToast.FADE_OUT ];
+   appCtxt.getAppController().setStatusMsg(text, type, null, transitions);
+}; 
+
 Com_Zimbra_EmailTemplates.prototype._doSaveTemplate =
 function () {
+   if (this._folderPath == "") {
+      this.status(this.getMessage("EmailTemplatesZimlet_setTemplatesFolder"), ZmStatusView.LEVEL_WARNING);
+      
+      this._displayPrefDialog();
+      return;
+   }
+   
     // When getting the message set isDraft to true.  This will allow the mandatory spell checker
     // to skip the check (which always results in the template being sent).  If mandatory spell checker is turned on.
     var msg = appCtxt.getCurrentView().getMsg(null, true);
