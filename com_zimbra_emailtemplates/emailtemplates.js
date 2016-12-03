@@ -570,8 +570,9 @@ function () {
 
 Com_Zimbra_EmailTemplates.prototype._doSaveTemplate =
 function () {
-
-    var msg = appCtxt.getCurrentView().getMsg();
+    // When getting the message set isDraft to true.  This will allow the mandatory spell checker
+    // to skip the check (which always results in the template being sent).  If mandatory spell checker is turned on.
+    var msg = appCtxt.getCurrentView().getMsg(null, true);
 
     if (msg.subject == "") {
 
