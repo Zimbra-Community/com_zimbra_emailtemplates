@@ -76,6 +76,10 @@ function(button, menu) {
 	if (!menu._loaded) {
 		this._getRecentEmails(false);
 		menu._loaded = true;
+	// Prevents a condition where the menu exists but has 0 items.
+	} else if (menu.getItemCount() <= 0) {
+		this._getRecentEmails(true);
+		menu._loaded = true;
 	} else {
 		var bounds = button.getBounds();
 		menu.popup(0, bounds.x, bounds.y + bounds.height, false);
@@ -104,6 +108,9 @@ function(removeChildren) {
 Com_Zimbra_EmailTemplates.prototype._getRecentEmailsHdlr =
 function(removeChildren, result) {
 	var menu = this._viewIdAndMenuMap[this._currentViewId].menu;
+
+	// Prevents the situation of all the items being added twice to the menu
+	if (menu.getItemCount() > 0) removeChildren = true;
 	if (removeChildren) {
 		menu.removeChildren();
 	}
