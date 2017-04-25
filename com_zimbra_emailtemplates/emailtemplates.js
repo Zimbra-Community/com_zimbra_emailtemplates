@@ -310,6 +310,25 @@ function(controller, composeView, templateSubject, templateBody, currentBodyCont
 			composeView._subjectField.value = templateSubject;
 		}
 	}
+	//insert from - Support for saving From Persona
+	var from = this.msg.getAddress(AjxEmailAddress.FROM);
+
+	// Set composeViewIdentitySelect to the identitySelect for mail or appointment.
+	var composeViewIdentitySelect;
+	if (this.viewId.includes("APPT"))
+		composeViewIdentitySelect = composeView._apptEditView.identitySelect;
+	else
+		composeViewIdentitySelect = composeView.identitySelect;
+
+	var identities = composeViewIdentitySelect.getOptions().getArray();
+	for (var i = 0; i < identities.length; i++) {
+		if (identities[i]._displayValue.includes("<" + from.address + ">")) {
+			// Set to this identity and break
+			composeViewIdentitySelect.setSelectedOption(identities[i]);
+			break;
+		}
+	}
+
 	//insert to & cc
 	if (insertMode == "all") {
 		var addrs = this.msg.participants.getArray();
