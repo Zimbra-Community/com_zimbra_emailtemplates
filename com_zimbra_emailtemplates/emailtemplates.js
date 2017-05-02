@@ -101,7 +101,7 @@ function(removeChildren) {
 	var _types = new AjxVector();
 	_types.add("MSG");
 
-	appCtxt.getSearchController().search({query: ["in:(\"",this._folderPath,"\")"].join(""), userText: true, limit:25, searchFor: ZmId.SEARCH_MAIL,
+	appCtxt.getSearchController().search({query: ["in:(\"",this._folderPath,"\")"].join(""), userText: true, limit:50, searchFor: ZmId.SEARCH_MAIL,
 		offset:0, types:_types, forceTypes: true, noRender:true, getHtml: getHtml, callback:callbck, errorCallback:callbck});
 };
 
