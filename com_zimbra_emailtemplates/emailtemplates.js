@@ -42,7 +42,7 @@ function(app, toolbar, controller, viewId) {
 
     this._currentViewId = this.viewId;
 
-	if (this.viewId.indexOf("COMPOSE") >= 0 || (this.viewId.indexOf("APPT") != -1)) {
+	if (this.viewId.indexOf("COMPOSE") >= 0) {
 		if (toolbar.getOp("EMAIL_TEMPLATES_ZIMLET_TOOLBAR_BUTTON")) {
 			return;
 		}
