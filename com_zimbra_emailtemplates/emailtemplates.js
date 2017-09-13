@@ -172,11 +172,13 @@ function() {
 
 Com_Zimbra_EmailTemplates.prototype._inlineImageInsert =
 function(element) {
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
    var file = element.files[0];
    var reader = new FileReader();
    reader.onloadend = function() {
       var img = '<img src="'+reader.result+'">';
-      appCtxt.getCurrentView().getHtmlEditor().pasteHtml(img);   
+      appCtxt.getCurrentView().getHtmlEditor().pasteHtml(img);
+      zimletInstance._dialog.popdown();
    }
    reader.readAsDataURL(file);
 };
