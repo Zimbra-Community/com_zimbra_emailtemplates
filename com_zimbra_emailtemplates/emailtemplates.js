@@ -153,35 +153,10 @@ function(menu) {
 	mi.addSelectionListener(new AjxListener(this, this._getRecentEmails, true));
 	var mi = menu.createMenuItem("preferences", {image:"Preferences", text:this.getMessage("EmailTemplatesZimlet_preferences")});
 	mi.addSelectionListener(new AjxListener(this, this._displayPrefDialog));
-   var mi = menu.createMenuItem("save", {image:"Save", text:this.getMessage("EmailTemplatesZimlet_save")});
-   mi.addSelectionListener(new AjxListener(this, this._saveTemplate));
-   var mi = menu.createMenuItem("image", {image:"ImageDoc", text:ZmMsg.attachInline});
-   mi.addSelectionListener(new AjxListener(this, this._inlineImage));
+    var mi = menu.createMenuItem("save", {image:"Save", text:this.getMessage("EmailTemplatesZimlet_save")});
+    mi.addSelectionListener(new AjxListener(this, this._saveTemplate));
 };
 
-Com_Zimbra_EmailTemplates.prototype._inlineImage =
-function() {
-   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
-   zimletInstance._dialog = new ZmDialog( { title:ZmMsg.attachInline, parent:zimletInstance.getShell(), standardButtons:[DwtDialog.OK_BUTTON], disposeOnPopDown:true } );
-   zimletInstance._dialog.setContent('<input type="file" onchange="Com_Zimbra_EmailTemplates.prototype._inlineImageInsert(this)" accept="image/x-png,image/gif,image/jpeg">(png/jpg/gif)');
-   zimletInstance._dialog.setButtonListener(DwtDialog.OK_BUTTON, new AjxListener(zimletInstance, zimletInstance._NoButtonClicked, [zimletInstance._dialog]));   
-   document.getElementById(zimletInstance._dialog.__internalId+'_handle').style.backgroundColor = '#eeeeee';
-   document.getElementById(zimletInstance._dialog.__internalId+'_title').style.textAlign = 'center';
-   zimletInstance._dialog.popup();
-};
-
-Com_Zimbra_EmailTemplates.prototype._inlineImageInsert =
-function(element) {
-   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
-   var file = element.files[0];
-   var reader = new FileReader();
-   reader.onloadend = function() {
-      var img = '<img src="'+reader.result+'">';
-      appCtxt.getCurrentView().getHtmlEditor().pasteHtml(img);
-      zimletInstance._dialog.popdown();
-   }
-   reader.readAsDataURL(file);
-};
 
 //--------------------------------------------------------------------------------------------------
 // LOAD SELECTED MESSAGE/TEMPLATE
