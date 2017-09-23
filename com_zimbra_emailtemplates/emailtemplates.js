@@ -29,6 +29,60 @@ Com_Zimbra_EmailTemplates.prototype.constructor = Com_Zimbra_EmailTemplates;
 Com_Zimbra_EmailTemplates.prototype.init =
 function() {
 	this._folderPath = this.getUserProperty("etemplates_sourcefolderPath");
+
+   if(appCtxt.get(ZmSetting.BRIEFCASE_ENABLED))
+   {
+      try {
+         var soapDoc = AjxSoapDoc.create("GetFolderRequest", "urn:zimbraMail");
+         var search = soapDoc.set("folder");
+         appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.createFolder});
+      } catch (err)
+      {
+         console.log('Com_Zimbra_EmailTemplates.prototype.init: failed to create folder');
+      }
+   }   
+};
+
+Com_Zimbra_EmailTemplates.prototype.createFolder = function (folders)
+{
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;   
+   var hasFolder = false;
+   try 
+   {
+      for(var x=0; x < folders._data.GetFolderResponse.folder[0].folder.length; x++)
+      {
+         if(folders._data.GetFolderResponse.folder[0].folder[x].name == "Email Templates public")
+         {
+            hasFolder = true;
+            zimletInstance.folderId=folders._data.GetFolderResponse.folder[0].folder[x].id;
+         }      
+      }
+   } catch (err)
+   {
+      hasFolder = false;
+   }
+
+   if (hasFolder == false)
+   {
+	   var soapDoc = AjxSoapDoc.create("CreateFolderRequest", "urn:zimbraMail");
+	   var search = soapDoc.set("folder");
+   	search.setAttribute("name",'Email Templates public');
+      search.setAttribute("view","document");
+      search.setAttribute("l",1);
+   	appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.getFolderId});
+   }
+};
+
+Com_Zimbra_EmailTemplates.prototype.getFolderId = function()
+{
+   try {
+      var soapDoc = AjxSoapDoc.create("GetFolderRequest", "urn:zimbraMail");
+      var search = soapDoc.set("folder");
+      appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.createFolder});
+   } catch (err)
+   {
+      console.log('Com_Zimbra_EmailTemplates.prototype.init: failed to create folder');
+   }   
 };
 
 Com_Zimbra_EmailTemplates.prototype.initializeToolbar =
@@ -153,11 +207,153 @@ function(menu) {
 	mi.addSelectionListener(new AjxListener(this, this._getRecentEmails, true));
 	var mi = menu.createMenuItem("preferences", {image:"Preferences", text:this.getMessage("EmailTemplatesZimlet_preferences")});
 	mi.addSelectionListener(new AjxListener(this, this._displayPrefDialog));
-    var mi = menu.createMenuItem("save", {image:"Save", text:this.getMessage("EmailTemplatesZimlet_save")});
-    mi.addSelectionListener(new AjxListener(this, this._saveTemplate));
+   var mi = menu.createMenuItem("save", {image:"Save", text:this.getMessage("EmailTemplatesZimlet_save")});
+   mi.addSelectionListener(new AjxListener(this, this._saveTemplate));
+   if(appCtxt.get(ZmSetting.BRIEFCASE_ENABLED))
+   {
+      var mi = menu.createMenuItem("image", {image:"ImageDoc", text:ZmMsg.insertImage});
+      mi.addSelectionListener(new AjxListener(this, this._inlineImage));
+   }   
 };
 
+Com_Zimbra_EmailTemplates.prototype._inlineImage =
+function() {
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
+   zimletInstance._dialog = new ZmDialog( { title:ZmMsg.insertImage, parent:zimletInstance.getShell(), standardButtons:[DwtDialog.OK_BUTTON], disposeOnPopDown:true } );
+   zimletInstance._dialog.setContent('<input type="file" onchange="Com_Zimbra_EmailTemplates.prototype._handleInlineImage(this)" accept="image/x-png,image/gif,image/jpeg">(png/jpg/gif)');
+   zimletInstance._dialog.setButtonListener(DwtDialog.OK_BUTTON, new AjxListener(zimletInstance, zimletInstance._NoButtonClicked, [zimletInstance._dialog]));   
+   document.getElementById(zimletInstance._dialog.__internalId+'_handle').style.backgroundColor = '#eeeeee';
+   document.getElementById(zimletInstance._dialog.__internalId+'_title').style.textAlign = 'center';
+   zimletInstance._dialog.popup();
+};
 
+Com_Zimbra_EmailTemplates.prototype._handleInlineImage =
+function(element) {
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
+   var soapDoc = AjxSoapDoc.create("CreateFolderRequest", "urn:zimbraMail");
+   var search = soapDoc.set("folder");
+   var randomName = Com_Zimbra_EmailTemplates.prototype._randomFolderName();
+   search.setAttribute("name",randomName);
+   search.setAttribute("view","document");
+   search.setAttribute("l",zimletInstance.folderId);
+   appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:new AjxCallback(Com_Zimbra_EmailTemplates.prototype._shareRandomFolderPublic,[element, randomName])});
+};
+
+Com_Zimbra_EmailTemplates.prototype._randomFolderName =
+function(element) {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 30; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+};
+
+Com_Zimbra_EmailTemplates.prototype._shareRandomFolderPublic =
+function(element, randomName, result) {
+   randomFolderId = result.getResponse().CreateFolderResponse.folder[0].id;
+   //FolderActionRequest
+   var soapDoc = AjxSoapDoc.create("BatchRequest", "urn:zimbra");
+   soapDoc.setMethodAttribute("onerror", "continue");
+    
+   var request = soapDoc.set("FolderActionRequest", null, null, "urn:zimbraMail");
+   var action = soapDoc.set("action");
+   action.setAttribute("op","grant");
+   action.setAttribute("id", randomFolderId);
+   var mnode = soapDoc.set("grant", null, action);
+   mnode.setAttribute("gt", "pub");
+   mnode.setAttribute("inh", "0");
+   mnode.setAttribute("perm", "r");
+   mnode.setAttribute("pw", "");
+   request.appendChild(action);
+   appCtxt.getAppController().sendRequest(
+   {
+      soapDoc : soapDoc,
+      asyncMode : true,
+      callback : new AjxCallback(Com_Zimbra_EmailTemplates.prototype._inlineImageUpload, [element, randomFolderId, randomName])
+   });
+               
+   
+};
+
+Com_Zimbra_EmailTemplates.prototype._inlineImageUpload =
+function(element, randomFolderId, randomFolderName) {
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
+   var file = element.files[0];
+   var reader = new FileReader();
+   reader.onloadend = function() {      
+      var req = new XMLHttpRequest();
+      req.open('POST', '/service/upload?fmt=extended,raw', true);
+      req.setRequestHeader('Cache-Control', 'no-cache');
+      req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      req.setRequestHeader('Content-Type',  'application/octet-stream' + ';');
+      req.setRequestHeader('X-Zimbra-Csrf-Token', window.csrfToken);
+      req.setRequestHeader('Content-Disposition', 'attachment; filename="'+file.name+'";');
+      req.onload = function() 
+      {
+         try 
+         { 
+            var resp = eval('[' + this.responseText + ']'), respObj;
+            respObj = resp[2];
+            //respObj > ct (content/type) and filename and the zimbra id aid
+            if (respObj[0].aid)
+            {
+               var soapDoc = AjxSoapDoc.create("SaveDocumentRequest", "urn:zimbraMail");
+               var doc = soapDoc.set("doc");
+               doc.setAttribute("l", randomFolderId);
+               var mnode = soapDoc.set("upload", null, doc);
+               mnode.setAttribute("id", respObj[0].aid);
+               var params = {
+                  soapDoc: soapDoc,
+                  asyncMode: true,
+                  callback:new AjxCallback(Com_Zimbra_EmailTemplates.prototype._inlineImageInsert,[randomFolderName])
+               };
+               appCtxt.getAppController().sendRequest(params);              
+            }
+         }
+         catch (err)
+         {
+            console.log('Upload failed'+err);
+         }   
+      };
+      req.send(reader.result);
+   }
+   reader.readAsArrayBuffer(file);
+};
+
+Com_Zimbra_EmailTemplates.prototype._inlineImageInsert =
+function(randomFolderName, result) {
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
+   try{   
+      var url = [];
+      var i = 0;
+      var proto = location.protocol;
+      var port = Number(location.port);
+      url[i++] = proto;
+      url[i++] = "//";
+      url[i++] = location.hostname;
+      if (port && ((proto == ZmSetting.PROTO_HTTP && port != ZmSetting.HTTP_DEFAULT_PORT) 
+         || (proto == ZmSetting.PROTO_HTTPS && port != ZmSetting.HTTPS_DEFAULT_PORT))) {
+         url[i++] = ":";
+         url[i++] = port;
+      }
+      url[i++] = "/home/";
+      url[i++] = AjxStringUtil.urlComponentEncode(appCtxt.getActiveAccount().name);
+      url[i++] = "/Email%20Templates%20public/";
+      url[i++] = randomFolderName+"/";
+      url[i++] = result.getResponse().SaveDocumentResponse.doc[0].name;
+   
+      var getUrl = url.join(""); 
+      var img = '<img src="'+getUrl+'">';
+      appCtxt.getCurrentView().getHtmlEditor().pasteHtml(img);
+   } catch (err)
+   {
+      console.log('Error uploading file'+err);
+   }
+   zimletInstance._dialog.popdown();
+};
+      
 //--------------------------------------------------------------------------------------------------
 // LOAD SELECTED MESSAGE/TEMPLATE
 //--------------------------------------------------------------------------------------------------
@@ -186,7 +382,6 @@ function(insertMode) {
 Com_Zimbra_EmailTemplates.prototype._testTemplateContentForKeys = function(params) {
 	//var regex = new RegExp("\\breplace__[a-z0-9A-Z]*", "ig");
 	var regex = new RegExp("\\$\\{[-a-zA-Z._0-9]+\\}", "ig");
-	
 	var templateBody = params.templateBody;
 	var templateSubject = params.templateSubject;
 	var bodyArry = templateBody.match(regex);
