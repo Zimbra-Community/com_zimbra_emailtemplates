@@ -1,22 +1,31 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Zimlets
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * Copyright (C) 2010, 2011, 2013, 2014, 2016 Synacor, Inc.
+ *
+ * The contents of this file are subject to the Common Public Attribution License Version 1.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at: https://www.zimbra.com/license
+ * The License is based on the Mozilla Public License Version 1.1 but Sections 14 and 15
+ * have been added to cover use of software over a computer network and provide for limited attribution
+ * for the Original Developer. In addition, Exhibit A has been modified to be consistent with Exhibit B.
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * See the License for the specific language governing rights and limitations under the License.
+ * The Original Code is Zimbra Open Source Web Client.
+ * The Initial Developer of the Original Code is Zimbra, Inc.  All rights to the Original Code were
+ * transferred by Zimbra, Inc. to Synacor, Inc. on September 14, 2015.
+ *
+ * All portions of the code are Copyright (C) 2010, 2011, 2013, 2014, 2016 Synacor, Inc. All Rights Reserved.
  * ***** END LICENSE BLOCK *****
  */
 
 /**
  * Constructor.
  * 
- * @author Raja Rao DV
+ * @author Raja Rao DV, maintained and modified by Barry de Graaff
+ * (license block from https://github.com/Zimbra/zm-zimlets/blob/develop/src/zimlet/com_zimbra_emailtemplates/emailtemplates.js)
  */
 function Com_Zimbra_EmailTemplates() {
 }
@@ -29,52 +38,6 @@ Com_Zimbra_EmailTemplates.prototype.constructor = Com_Zimbra_EmailTemplates;
 Com_Zimbra_EmailTemplates.prototype.init =
 function() {
 	this._folderPath = this.getUserProperty("etemplates_sourcefolderPath");
-
-   if(appCtxt.get(ZmSetting.BRIEFCASE_ENABLED))
-   {
-      try {
-         var soapDoc = AjxSoapDoc.create("GetFolderRequest", "urn:zimbraMail");
-         var search = soapDoc.set("folder");
-         appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.createFolder});
-      } catch (err)
-      {
-         console.log('Com_Zimbra_EmailTemplates.prototype.init: failed to create folder');
-      }
-   }   
-};
-
-Com_Zimbra_EmailTemplates.prototype.createFolder = function (folders)
-{
-   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;   
-   var hasFolder = false;
-   try 
-   {
-      for(var x=0; x < folders._data.GetFolderResponse.folder[0].folder.length; x++)
-      {
-         if(folders._data.GetFolderResponse.folder[0].folder[x].name == "Email Templates public")
-         {
-            hasFolder = true;
-            zimletInstance.folderId=folders._data.GetFolderResponse.folder[0].folder[x].id;
-         }      
-      }
-   } catch (err)
-   {
-      hasFolder = false;
-   }
-
-   if (hasFolder == false)
-   {
-	   var soapDoc = AjxSoapDoc.create("CreateFolderRequest", "urn:zimbraMail");
-	   var search = soapDoc.set("folder");
-   	search.setAttribute("name",'Email Templates public');
-      search.setAttribute("view","document");
-      search.setAttribute("l",1);
-   	appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.getFolderId});
-   }
-};
-
-Com_Zimbra_EmailTemplates.prototype.getFolderId = function()
-{
    try {
       var soapDoc = AjxSoapDoc.create("GetFolderRequest", "urn:zimbraMail");
       var search = soapDoc.set("folder");
@@ -82,7 +45,7 @@ Com_Zimbra_EmailTemplates.prototype.getFolderId = function()
    } catch (err)
    {
       console.log('Com_Zimbra_EmailTemplates.prototype.init: failed to create folder');
-   }   
+   } 
 };
 
 Com_Zimbra_EmailTemplates.prototype.initializeToolbar =
@@ -105,7 +68,7 @@ function(app, toolbar, controller, viewId) {
 
 		//create params obj with button details
 		var buttonArgs = {
-			text	: this.getMessage("EmailTemplatesZimlet_templates"),
+			text	: this.getMessage("label"),
 			tooltip: this.getMessage("EmailTemplatesZimlet_tooltip"),
 			index: buttonIndex, //position of the button
 			image: "zimbraicon" //icon
@@ -207,20 +170,67 @@ function(menu) {
 	mi.addSelectionListener(new AjxListener(this, this._getRecentEmails, true));
 	var mi = menu.createMenuItem("preferences", {image:"Preferences", text:this.getMessage("EmailTemplatesZimlet_preferences")});
 	mi.addSelectionListener(new AjxListener(this, this._displayPrefDialog));
-   var mi = menu.createMenuItem("save", {image:"Save", text:this.getMessage("EmailTemplatesZimlet_save")});
+   var mi = menu.createMenuItem("save", {image:"Save", text:ZmMsg.save});
    mi.addSelectionListener(new AjxListener(this, this._saveTemplate));
-   if(appCtxt.get(ZmSetting.BRIEFCASE_ENABLED))
+   var mi = menu.createMenuItem("image", {image:"ImageDoc", text:ZmMsg.insertImage});
+    mi.addSelectionListener(new AjxListener(this, this._inlineImage));
+};
+
+//--------------------------------------------------------------------------------------------------
+// CREATE BRIEFCASE FOLDER FOR INLINE IMAGES
+//--------------------------------------------------------------------------------------------------
+
+Com_Zimbra_EmailTemplates.prototype.createFolder = function (folders)
+{
+   var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;   
+   var hasFolder = false;
+   try 
    {
-      var mi = menu.createMenuItem("image", {image:"ImageDoc", text:ZmMsg.insertImage});
-      mi.addSelectionListener(new AjxListener(this, this._inlineImage));
+      for(var x=0; x < folders._data.GetFolderResponse.folder[0].folder.length; x++)
+      {
+         if(folders._data.GetFolderResponse.folder[0].folder[x].name == "Email Templates public")
+         {
+            hasFolder = true;
+            zimletInstance.folderId=folders._data.GetFolderResponse.folder[0].folder[x].id;
+         }      
+      }
+   } catch (err)
+   {
+      hasFolder = false;
+   }
+
+   if (hasFolder == false)
+   {
+	   var soapDoc = AjxSoapDoc.create("CreateFolderRequest", "urn:zimbraMail");
+	   var search = soapDoc.set("folder");
+   	search.setAttribute("name",'Email Templates public');
+      search.setAttribute("view","document");
+      search.setAttribute("l",1);
+   	appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.getFolderId});
+   }
+};
+
+Com_Zimbra_EmailTemplates.prototype.getFolderId = function()
+{
+   try {
+      var soapDoc = AjxSoapDoc.create("GetFolderRequest", "urn:zimbraMail");
+      var search = soapDoc.set("folder");
+      appCtxt.getAppController().sendRequest({soapDoc:soapDoc, asyncMode:true, callback:Com_Zimbra_EmailTemplates.prototype.createFolder});
+   } catch (err)
+   {
+      console.log('Com_Zimbra_EmailTemplates.prototype.init: failed to create folder');
    }   
 };
+
+//--------------------------------------------------------------------------------------------------
+// SUPPORT INLINE IMAGES VIA BRIEFCASE SHARE WITH MENU OPTION
+//--------------------------------------------------------------------------------------------------
 
 Com_Zimbra_EmailTemplates.prototype._inlineImage =
 function() {
    var zimletInstance = appCtxt._zimletMgr.getZimletByName('com_zimbra_emailtemplates').handlerObject;
    zimletInstance._dialog = new ZmDialog( { title:ZmMsg.insertImage, parent:zimletInstance.getShell(), standardButtons:[DwtDialog.OK_BUTTON], disposeOnPopDown:true } );
-   zimletInstance._dialog.setContent('<input type="file" onchange="Com_Zimbra_EmailTemplates.prototype._handleInlineImage(this)" accept="image/x-png,image/gif,image/jpeg">(png/jpg/gif)');
+   zimletInstance._dialog.setContent('<input type="file" onchange="Com_Zimbra_EmailTemplates.prototype._handleInlineImage(this)" accept="image/x-png,image/gif,image/jpeg">(png/jpg/gif)<br><br><b>'+ZmMsg.share +': ' + ZmMsg.shareWithPublicLong) + '<b>';
    zimletInstance._dialog.setButtonListener(DwtDialog.OK_BUTTON, new AjxListener(zimletInstance, zimletInstance._NoButtonClicked, [zimletInstance._dialog]));   
    document.getElementById(zimletInstance._dialog.__internalId+'_handle').style.backgroundColor = '#eeeeee';
    document.getElementById(zimletInstance._dialog.__internalId+'_title').style.textAlign = 'center';
@@ -289,7 +299,7 @@ function(element, randomFolderId, randomFolderName) {
       req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       req.setRequestHeader('Content-Type',  'application/octet-stream' + ';');
       req.setRequestHeader('X-Zimbra-Csrf-Token', window.csrfToken);
-      req.setRequestHeader('Content-Disposition', 'attachment; filename="'+file.name+'";');
+      req.setRequestHeader('Content-Disposition', 'attachment; filename="'+Com_Zimbra_EmailTemplates.prototype.sanitizeFileName(file.name)+'";');
       req.onload = function() 
       {
          try 
@@ -345,13 +355,19 @@ function(randomFolderName, result) {
       url[i++] = result.getResponse().SaveDocumentResponse.doc[0].name;
    
       var getUrl = url.join(""); 
-      var img = '<img src="'+getUrl+'">';
+      var img = '<img src="'+getUrl+'" alt="'+getUrl+'">';
       appCtxt.getCurrentView().getHtmlEditor().pasteHtml(img);
    } catch (err)
    {
       console.log('Error uploading file'+err);
    }
    zimletInstance._dialog.popdown();
+};
+
+//Sanitize file names so they are allowed in Windows and add %, &, @ , !, ', [, ], (, ), ;, =, +, $, ,, #
+Com_Zimbra_EmailTemplates.prototype.sanitizeFileName = function (fileName) {
+   //Also remove double spaces
+   return fileName.replace(/\\|\/|\:|\*|\?|\"|\<|\>|\||\%|\&|\@|\!|\'|\[|\]|\(|\)|\;|\=|\+|\$|\,|\#/gm,"").replace(/ +(?= )/g,'');
 };
       
 //--------------------------------------------------------------------------------------------------
@@ -747,7 +763,7 @@ function() {
 	var dlg = appCtxt.getYesNoMsgDialog();
 	dlg.registerCallback(DwtDialog.YES_BUTTON, this._yesButtonClicked, this, dlg);
 	dlg.registerCallback(DwtDialog.NO_BUTTON, this._NoButtonClicked, this, dlg);
-	dlg.setMessage(this.getMessage("EmailTemplatesZimlet_restartBrowser"), DwtMessageDialog.WARNING_STYLE);
+	dlg.setMessage(ZmMsg.zimletChangeRestart, DwtMessageDialog.WARNING_STYLE);
 	dlg.popup();
 };
 
@@ -811,11 +827,11 @@ function () {
 
         var dlg = appCtxt.getMsgDialog()
         dlg.setMessage(
-            this.getMessage("EmailTemplatesZimlet_noSubject"),
+            ZmMsg.errorMissingSubject,
             DwtMessageDialog.CRITICAL_STYLE
         );
         dlg.setTitle(
-            this.getMessage("EmailTemplatesZimlet_noSubject_title")
+            ZmMsg.errorMissingSubject
         )
         dlg.popup();
 
@@ -841,7 +857,8 @@ function () {
             []
         )
     );
-
+/*
+ * removed as the messages EmailTemplatesZimlet_saved are not upstream, and we do not need this dialog
     var dlg = appCtxt.getMsgDialog();
     dlg.setMessage(
         this.getMessage("EmailTemplatesZimlet_saved"),
@@ -849,7 +866,7 @@ function () {
     );
     dlg.setTitle(this.getMessage("EmailTemplatesZimlet_saved_title"));
     dlg.popup();
-
+*/
 };
 
 Com_Zimbra_EmailTemplates.prototype.singleClicked =

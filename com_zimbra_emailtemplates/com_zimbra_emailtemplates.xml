@@ -1,9 +1,7 @@
-<zimlet name="com_zimbra_emailtemplates" version="0.9.6" description="Allows users to insert Email Templates" target="main compose-window">
+<zimlet name="com_zimbra_emailtemplates" version="0.9.6" label="${msg.label}" description="${msg.description}" target="main compose-window">
   <include>emailtemplates.js</include>
 	<includeCSS>emailtemplates.css</includeCSS>
   <handlerObject>Com_Zimbra_EmailTemplates</handlerObject>
-  <zimletPanelItem icon="Message"
-    label="${msg.EmailTemplatesZimlet_templates}" />
   <userProperties>
 		<property type="string" name="etemplates_sourcefolderPath" value=""/>	
   </userProperties>
