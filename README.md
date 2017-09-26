@@ -1,6 +1,9 @@
 Zimbra Email Templates
 ==========
 
+- Supports inline images
+- Supports personas/from correctly restored 
+
 If you find Email templates useful and want to support its continued development, you can make donations via:
 - PayPal: info@barrydegraaff.tk
 - Bank transfer: IBAN NL55ABNA0623226413 ; BIC ABNANL2A

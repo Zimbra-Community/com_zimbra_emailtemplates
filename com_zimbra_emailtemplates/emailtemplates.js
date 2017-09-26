@@ -25,7 +25,6 @@
  * Constructor.
  * 
  * @author Raja Rao DV, maintained and modified by Barry de Graaff
- * (license block from https://github.com/Zimbra/zm-zimlets/blob/develop/src/zimlet/com_zimbra_emailtemplates/emailtemplates.js)
  */
 function Com_Zimbra_EmailTemplates() {
 }
