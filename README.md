@@ -24,4 +24,6 @@ Save the template
 Use the template for new mails
 ![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/04.png "Use the template for new mails")
 
+Designed for Zimbra 8.7 and above, Zimbra desktop is not supported.
+
 Or if you prefer video: https://youtu.be/o877BaQRiUY
