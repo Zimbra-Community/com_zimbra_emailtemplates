@@ -37,6 +37,7 @@ Com_Zimbra_EmailTemplates.prototype.constructor = Com_Zimbra_EmailTemplates;
 Com_Zimbra_EmailTemplates.prototype.init =
 function() {
 	this._folderPath = this.getUserProperty("etemplates_sourcefolderPath");
+   this._folderPathId = this.getUserProperty("etemplates_sourcefolderPathId");
    try {
       var soapDoc = AjxSoapDoc.create("GetFolderRequest", "urn:zimbraMail");
       var search = soapDoc.set("folder");
@@ -112,12 +113,23 @@ function(removeChildren) {
 		this._getRecentEmailsHdlr(removeChildren);
 		return;
 	}
+
+   //the user may have stored the path, but not the id of the folder.
+   if (this._folderPathId == "") {
+      this.status(this.getMessage("EmailTemplatesZimlet_setTemplatesFolder"), ZmStatusView.LEVEL_WARNING);
+      
+      this._displayPrefDialog();
+      return;
+   }
+   
 	var getHtml = appCtxt.get(ZmSetting.VIEW_AS_HTML);
 	var callbck = new AjxCallback(this, this._getRecentEmailsHdlr, removeChildren);
 	var _types = new AjxVector();
 	_types.add("MSG");
 
-	appCtxt.getSearchController().search({query: ["in:(\"",this._folderPath,"\")"].join(""), userText: true, limit:50, searchFor: ZmId.SEARCH_MAIL,
+   //using under: instead of in: to support sub-folders
+   //under: does not seem to work well on shared accounts/mount points, this is probably a bug: http://lists.zetalliance.org/pipermail/users_lists.zetalliance.org/2018-June/001231.html
+	appCtxt.getSearchController().search({query: ["underid:(\"",this._folderPathId,"\")"].join(""), userText: true, limit:50, searchFor: ZmId.SEARCH_MAIL,
 		offset:0, types:_types, forceTypes: true, noRender:true, getHtml: getHtml, callback:callbck, errorCallback:callbck});
 };
 
@@ -137,10 +149,39 @@ function(removeChildren, result) {
 			return;
 		}
 		var array = result.getResponse().getResults("MSG").getVector().getArray();
-		for (var i = 0; i < array.length; i++) {
+
+      //get the ZmFolder of the ZmMsg so we can sort the result
+      for (var i = 0; i < array.length; i++) {
+         array[i].folder = appCtxt.getById(array[i].folderId)
+      }
+
+      //sort the result
+      var orderedArray = [];
+      var arrayKeys = [];
+      for (var i = 0; i < array.length; i++) {
+         array[i].folder = appCtxt.getById(array[i].folderId)
+         orderedArray[(array[i].folder.name+array[i].subject).toLowerCase()] = array[i];
+         arrayKeys.push((array[i].folder.name+array[i].subject).toLowerCase());
+      }     
+      arrayKeys.sort()
+      array = [];
+      for (var i = 0; i < arrayKeys.length; i++) {
+         array.push(orderedArray[arrayKeys[i]]);
+      }
+  
+
+      var currentFolder = "";
+      for (var i = 0; i < array.length; i++) {
 			var msg = array[i];
 			var id = msg.id;
-			var mi = menu.createMenuItem(id, {image:"zimbraIcon", text:msg.subject, style:DwtMenuItem.CASCADE_STYLE});
+                 
+         if(currentFolder!==(array[i].folder.name).toLowerCase() && currentFolder != "")
+         {
+            menu.createSeparator();
+         }
+         currentFolder=(array[i].folder.name).toLowerCase();
+                 
+			var mi = menu.createMenuItem(id, {image:"zimbraIcon", text:msg.folder.name + ' - ' + msg.subject, style:DwtMenuItem.CASCADE_STYLE});
 			var submenu = new ZmPopupMenu(mi); //create submenu
 			mi.setMenu(submenu);//add submenu to menuitem
 
@@ -153,7 +194,7 @@ function(removeChildren, result) {
 		}
 		if (array.length != 0) {
 			mi = menu.createMenuItem(id, {style:DwtMenuItem.SEPARATOR_STYLE});
-		}
+		}      
 	}
 
 	this._addStandardMenuItems(menu);
@@ -162,6 +203,20 @@ function(removeChildren, result) {
 	var bounds = button.getBounds();
 	menu.popup(0, bounds.x, bounds.y + bounds.height, false);
 };
+
+Com_Zimbra_EmailTemplates.prototype.array_values = function(input) {
+  //  discuss at: http://locutus.io/php/array_values/
+  // original by: Kevin van Zonneveld (http://kvz.io)
+  // improved by: Brett Zamir (http://brett-zamir.me)
+  //   example 1: array_values( {firstname: 'Kevin', surname: 'van Zonneveld'} )
+  //   returns 1: [ 'Kevin', 'van Zonneveld' ]
+  var tmpArr = [];
+  var key = '';
+  for (key in input) {
+    tmpArr[tmpArr.length] = input[key];
+  }
+  return tmpArr;
+}
 
 Com_Zimbra_EmailTemplates.prototype._addStandardMenuItems =
 function(menu) {
@@ -706,6 +761,7 @@ Com_Zimbra_EmailTemplates.prototype._prefOKBtnListener =
 function() {
 	if (this.needRefresh) {
 		this.setUserProperty("etemplates_sourcefolderPath", this._folderPath);
+      this.setUserProperty("etemplates_sourcefolderPathId", this._folderPathId);
 		var callback = new AjxCallback(this, this._handleSaveProperties, this.needRefresh);
 		this.saveUserProperties(callback);
 	}
@@ -738,11 +794,19 @@ Com_Zimbra_EmailTemplates.prototype._chooseFolderOkBtnListener =
 function(dlg, folder) {
 	dlg.popdown();
 	var fp = folder.getPath();
+   var fpId = folder.id;
 	this.needRefresh = false;
 	if (this._folderPath != fp) {
 		this.needRefresh = true;
 	}
+
+	if (this._folderPathId != fpId) {
+		this.needRefresh = true;
+	}   
+   
 	this._folderPath = fp;
+   this._folderPathId = fpId;
+   
 	document.getElementById("emailtemplates_folderInfo").innerHTML = this._folderPath;
 };
 

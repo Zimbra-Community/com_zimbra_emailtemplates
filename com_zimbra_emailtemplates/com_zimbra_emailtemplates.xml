@@ -21,7 +21,7 @@
  * ***** END LICENSE BLOCK *****
 -->
 <zimlet name="com_zimbra_emailtemplates"
-        version="0.9.6"
+        version="1.0.0"
         label="${msg.label}"
         description="${msg.description}"
         target="main compose-window">
@@ -31,5 +31,6 @@
 
     <userProperties>
         <property type="string" name="etemplates_sourcefolderPath" value=""/>
+        <property type="string" name="etemplates_sourcefolderPathId" value=""/>
     </userProperties>
 </zimlet>
