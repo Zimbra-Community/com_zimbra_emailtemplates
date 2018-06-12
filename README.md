@@ -1,8 +1,12 @@
 Zimbra Email Templates
 ==========
 
+On top of the version maintained by Zimbra, this version supports:
 - Supports inline images
-- Supports personas/from correctly restored 
+- Supports setting personas/from address correctly
+- Supports organizing templates in sub folders
+
+
 
 If you find Email templates useful and want to support its continued development, you can make donations via:
 - PayPal: info@barrydegraaff.tk
