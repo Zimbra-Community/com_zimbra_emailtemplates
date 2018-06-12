@@ -24,6 +24,9 @@ Save the template
 Use the template for new mails
 ![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/04.png "Use the template for new mails")
 
+Organize your templates by putting them in sub-folders (new)
+![alt text](https://raw.githubusercontent.com/Zimbra-Community/com_zimbra_emailtemplates/master/06.png "Organize with sub folders")
+
 Designed for Zimbra 8.7 and above, Zimbra desktop is not supported.
 
 Or if you prefer video: https://youtu.be/o877BaQRiUY
