@@ -6,7 +6,7 @@ On top of the version maintained by Zimbra, this version supports:
 - Supports setting personas/from address correctly
 - Supports organizing templates in sub folders
 
-*** Upgrading to 1.0.0 from older versions ***
+**Upgrading to 1.0.0 from older versions**
 
 On the server you need to restart mailboxd `zmmailboxdctl restart` for the upgrade to work. Existing users will need to set their templates folder again even if they already did in an older version as a result of https://bugzilla.zimbra.com/show_bug.cgi?id=108986
 
