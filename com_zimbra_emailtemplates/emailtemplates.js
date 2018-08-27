@@ -395,7 +395,9 @@ function(randomFolderName, result) {
       url[i++] = result.getResponse().SaveDocumentResponse.doc[0].name;
    
       var getUrl = url.join(""); 
-      var img = '<img src="'+getUrl+'" alt="'+getUrl+'">';
+      //var img = '<img src="'+getUrl+'" alt="'+getUrl+'">';
+      //patched for Zimbra 8.8, it will break existing templates
+      var img = '<img dfsrc="'+getUrl+'" alt="inline image">';
       appCtxt.getCurrentView().getHtmlEditor().pasteHtml(img);
    } catch (err)
    {

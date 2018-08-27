@@ -21,7 +21,7 @@
  * ***** END LICENSE BLOCK *****
 -->
 <zimlet name="com_zimbra_emailtemplates"
-        version="1.0.0"
+        version="1.0.1"
         label="${msg.label}"
         description="${msg.description}"
         target="main compose-window">
