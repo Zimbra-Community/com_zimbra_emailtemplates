@@ -6,6 +6,8 @@ On top of the version maintained by Zimbra, this version supports:
 - Supports setting personas/from address correctly
 - Supports organizing templates in sub folders
 
+This version supports Zimbra 8.8.15. For a Zimbra 9 version go to https://github.com/Zimbra/zimbra-zimlet-email-templates
+
 **Installing**
 
 Download the latest `com_zimbra_emailtemplates.zip` from https://github.com/Zimbra-Community/com_zimbra_emailtemplates/releases and as zimbra user run `zmzimletctl -l deploy com_zimbra_emailtemplates.zip`
