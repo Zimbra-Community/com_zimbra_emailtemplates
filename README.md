@@ -14,10 +14,6 @@ Download the latest `com_zimbra_emailtemplates.zip` from https://github.com/Zimb
 
 If you are upgrading from an older/different email templates: On the server you need to restart mailboxd `zmmailboxdctl restart` for the upgrade to work. Existing users will need to set their templates folder again even if they already did in an older version as a result of https://bugzilla.zimbra.com/show_bug.cgi?id=108986
 
-If you find Email templates useful and want to support its continued development, you can make donations via:
-- PayPal: info@barrydegraaff.tk
-- Bank transfer: IBAN NL55ABNA0623226413 ; BIC ABNANL2A
-
 _This is the adopted version of Email templates -zimlet_ from Zimbra Inc.
 
 Email templates are useful for Sales, Support or anyone who sends out the same email on a regular basis.
