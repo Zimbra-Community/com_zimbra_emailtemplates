@@ -439,7 +439,7 @@ function(insertMode) {
 
 Com_Zimbra_EmailTemplates.prototype._testTemplateContentForKeys = function(params) {
 	//var regex = new RegExp("\\breplace__[a-z0-9A-Z]*", "ig");
-	var regex = new RegExp("\\$\\{[-a-zA-Z._0-9]+\\}", "ig");
+	var regex = new RegExp("\\$\\{[-a-zA-Z._0-9]+\\}|#\\{[-a-zA-Z._0-9]+\\}", "ig");
 	var templateBody = params.templateBody;
 	var templateSubject = params.templateSubject;
 	var bodyArry = templateBody.match(regex);
@@ -497,16 +497,27 @@ function(params) {
 	var i = 0;
 	var html = new Array();
 	html[i++] = "<div class='emailTemplates_yellow'>"+this.getMessage("EmailTemplatesZimlet_replaceGenericData")+"</div><BR/>";
-	html[i++] = "<TABLE  class='emailTemplates_table' width=100% cellspacing=3 cellpadding=3>";
+	html[i++] = "<table  class='emailTemplates_table' width=100% cellspacing=3 cellpadding=3>";
 	for (var k = 0; k < dataArry.length; k++) {
 		var key = dataArry[k];
-        key = key.replace(/\$\{([^}]*)\}/, "$1");
-		var id = Dwt.getNextId();
-		this._replaceFieldIds.push(id);
-		this._replaceFieldIdsMap.push({key:key, id:id});
-		html[i++] = ["<TR><TD><DIV style='font-weight:bold;'>",key,"</div></TD><TD><input type=text id='",id,"'></input></TD></TR>"].join("");
+		var simpleRegex = new RegExp("\\$\\{[-a-zA-Z._0-9]+\\}", "ig");
+		var listRegex = new RegExp("#\\{[-a-zA-Z._0-9]+\\}", "ig");
+        	if (simpleRegex.test(key)) {
+			key = key.replace(/\$\{([^}]*)\}/, "$1");
+			var id = Dwt.getNextId();
+			this._replaceFieldIds.push(id);
+			this._replaceFieldIdsMap.push({key:key, id:id});
+			html[i++] = ["<tr><td><div style='font-weight:bold;'>",key,"</div></td><td><input type=text id='",id,"'></input></td></tr>"].join("");
+		} else if (listRegex.test(key)) {
+			key = key.replace(/#\{([^}]*)\}/, "$1");
+			var id = Dwt.getNextId();
+			this._replaceFieldIds.push(id);
+			this._replaceFieldIdsMap.push({key:key, id:id});
+			html[i++] = ["<tr><td><div style='font-weight:bold;'>",key,"</div></td><td><textarea rows=5 id='",id,"'></textarea></td></tr>"].join("");
+			html[i++] = ["<tr><td><div>",this.getMessage("EmailTemplatesZimlet_ordered"),"</div></td><td><input type=radio id=",id,"_yes name=",id,"_ord value=yes><label for=",id,"_yes>",this.getMessage("EmailTemplatesZimlet_yes"),"</label><input type=radio checked=true id=",id,"_no name=",id,"_ord value=no><label for=",id,"_no>",this.getMessage("EmailTemplatesZimlet_no"),"</label></td></tr>"].join("");
+		}	
 	}
-	html[i++] = "</TABLE>";
+	html[i++] = "</table>";
 	this.replaceDlgView.getHtmlElement().innerHTML = html.join("");
 };
 
@@ -537,17 +548,24 @@ function() {
 	var currentBodyContent = params.currentBodyContent;
 	for (var i = 0; i < this._replaceFieldIdsMap.length; i++) {
 		var obj = this._replaceFieldIdsMap[i];
-		var key = "${" + obj.key + "}";
-		key = key.replace(/\$\{/,"\\$\\{").replace(/\}$/, "\\}");
-		var regEx = new RegExp(key, "ig");
+		var simpleRegex = new RegExp(("${" + obj.key + "}").replace(/\$\{/,"\\$\\{").replace(/\}$/, "\\}"));
+		var listRegex = new RegExp(("#{" + obj.key + "}").replace(/#\{/,"#\\{").replace(/\}$/, "\\}"));
 		var val = document.getElementById(obj.id).value;
 		if (val == "") {
-			continue;
+				continue;
 		}
-		if (insertMode == "bodyAndSubject" || insertMode == "all") {
-			templateSubject = templateSubject.replace(regEx, val);
+		if (simpleRegex.test(templateBody) || simpleRegex.test(templateSubject)) {
+			
+			if (insertMode == "bodyAndSubject" || insertMode == "all") {
+				templateSubject = templateSubject.replace(simpleRegex, val);
+			}
+			templateBody = templateBody.replace(simpleRegex, val);
+		} else if (listRegex.test(templateBody)) {
+			var type = document.getElementById(obj.id + "_no").checked ? "ul" : "ol";
+			var list = "<" + type +  ">" + val.split('\n').map(x => "<li>" + x + "</li>").join("")  + "</" + type + ">";
+			templateBody = templateBody.replace(listRegex, list);
 		}
-		templateBody = templateBody.replace(regEx, val);
+		
 	}
 	this.replaceDlg.popdown();
 	this._doInsert(params.controller, params.composeView, templateSubject, templateBody, currentBodyContent, insertMode);
