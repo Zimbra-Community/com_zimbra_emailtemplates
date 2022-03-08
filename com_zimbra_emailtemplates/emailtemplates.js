@@ -552,7 +552,7 @@ function() {
 		var listRegex = new RegExp(("#{" + obj.key + "}").replace(/#\{/,"#\\{").replace(/\}$/, "\\}"));
 		var val = document.getElementById(obj.id).value;
 		if (val == "") {
-				continue;
+			continue;
 		}
 		if (simpleRegex.test(templateBody) || simpleRegex.test(templateSubject)) {
 			
