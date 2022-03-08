@@ -562,8 +562,13 @@ function() {
 			templateBody = templateBody.replace(simpleRegex, val);
 		} else if (listRegex.test(templateBody)) {
 			var type = document.getElementById(obj.id + "_no").checked ? "ul" : "ol";
-			var list = "<" + type +  ">" + val.split('\n').map(x => "<li>" + x + "</li>").join("")  + "</" + type + ">";
-			templateBody = templateBody.replace(listRegex, list);
+			var list = val.split('\n');
+            		var result = "<" + type + ">";
+            		for (var idx in list) {
+                		result += "<li>" + list[idx] + "</li>";
+            		}
+            		result += "</" + type + ">";
+            		templateBody = templateBody.replace(listRegex, result);
 		}
 		
 	}
