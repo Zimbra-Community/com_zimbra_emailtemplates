@@ -548,7 +548,7 @@ function() {
 	var currentBodyContent = params.currentBodyContent;
 	for (var i = 0; i < this._replaceFieldIdsMap.length; i++) {
 		var obj = this._replaceFieldIdsMap[i];
-		var simpleRegex = new RegExp(("${" + obj.key + "}").replace(/\$\{/,"\\$\\{").replace(/\}$/, "\\}"));
+		var simpleRegex = new RegExp(("${" + obj.key + "}").replace(/\$\{/,"\\$\\{").replace(/\}$/, "\\}"), "g");
 		var listRegex = new RegExp(("#{" + obj.key + "}").replace(/#\{/,"#\\{").replace(/\}$/, "\\}"));
 		var val = document.getElementById(obj.id).value;
 		if (val == "") {
